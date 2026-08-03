@@ -1,0 +1,1335 @@
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lupus Academy | V35.3 (A Máquina de Retenção)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <style>
+        :root {
+            --bg-dark: #050505; 
+            --card-bg: #121215;
+            --neon-lupus: #8b5cf6;
+            --neon-hover: #a78bfa;
+            --text-main: #f4f4f5;
+            --text-muted: #a1a1aa;
+            --border-color: #27272a;
+            --bronze: #d97706;
+            --timer-color: #10b981;
+            --danger: #ef4444;
+            --gold: #fbbf24;
+            --fire: #ff5722;
+        }
+
+        /* RESET GLOBAL */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; outline: none; -webkit-tap-highlight-color: transparent; }
+        
+        body { background: radial-gradient(circle at center, #11081f 0%, var(--bg-dark) 100%); color: var(--text-main); display: flex; justify-content: center; min-height: 100vh; overflow-x: hidden; transition: background-color 0.5s ease; }
+
+        #particles-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; transition: opacity 1.5s ease; opacity: 1; }
+        body.logged-in #particles-canvas { opacity: 0.25; } 
+
+        .ambient-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; overflow: hidden; display: none; }
+        .spin-bg { position: absolute; top: 50%; left: 50%; width: 150vw; height: 150vw; transform: translate(-50%, -50%); background: conic-gradient(transparent, var(--neon-lupus), var(--gold), transparent); animation: spinNeonBg 15s linear infinite; filter: blur(120px); opacity: 0.20; }
+        @keyframes spinNeonBg { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+
+        body.foco-absoluto nav, 
+        body.foco-absoluto .dash-header, 
+        body.foco-absoluto .chart-card { opacity: 0.15; filter: blur(4px); pointer-events: none; transition: all 0.5s ease; }
+        body.foco-absoluto #containerRegistros,
+        body.foco-absoluto .card:first-of-type { box-shadow: 0 0 40px rgba(139, 92, 246, 0.15); border-color: var(--neon-lupus); transition: all 0.5s ease; z-index: 10; position: relative; }
+
+        #transitionOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background-color: var(--bg-dark);
+            z-index: 99999; display: none; flex-direction: column; justify-content: center; align-items: center; opacity: 1; transition: opacity 0.5s ease;
+        }
+        .glitch-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; width: 100%; }
+        .logo-wolf-transition { display: block; margin: 0 auto 20px auto; width: 120px; height: 120px; filter: drop-shadow(0 0 20px rgba(139,92,246,0.8)); animation: pulseLogo 1.5s infinite alternate; }
+        @keyframes pulseLogo { from { transform: scale(1); filter: drop-shadow(0 0 10px rgba(139,92,246,0.5)); } to { transform: scale(1.05); filter: drop-shadow(0 0 30px rgba(139,92,246,1)); } }
+        .loading-text { color: var(--text-main); font-weight: 600; letter-spacing: 4px; font-size: 14px; text-transform: uppercase; margin-bottom: 15px; animation: blinkText 1s infinite; text-align: center; }
+        @keyframes blinkText { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .progress-bar-transition { width: 200px; height: 4px; background: var(--border-color); border-radius: 10px; overflow: hidden; margin: 0 auto; }
+        .progress-fill-transition { width: 0%; height: 100%; background: var(--neon-lupus); animation: fillBar 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; box-shadow: 0 0 10px var(--neon-lupus); }
+        @keyframes fillBar { 0% { width: 0%; } 50% { width: 60%; } 100% { width: 100%; } }
+
+        #loginScreen { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 100vh; position: relative; z-index: 10; background: transparent; }
+        .login-wrapper { position: relative; padding: 2px; border-radius: 22px; z-index: 1; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+        .login-wrapper::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: conic-gradient(transparent, transparent, transparent, var(--neon-lupus), var(--gold), transparent); animation: spinNeon 4s linear infinite; pointer-events: none; }
+        @keyframes spinNeon { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .login-box { background: rgba(18, 18, 21, 0.85); backdrop-filter: blur(20px); border-radius: 20px; padding: 40px; width: 100%; min-width: 350px; text-align: center; position: relative; z-index: 1; }
+        .logo-wolf { width: 100px; height: 100px; margin: 0 auto 15px; filter: drop-shadow(0 0 15px rgba(139,92,246,0.6)); }
+        .login-box h1 { color: var(--text-main); font-weight: 800; font-size: 32px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 2px; }
+        .login-box p.subtitle { color: var(--neon-lupus); margin-bottom: 30px; font-size: 13px; letter-spacing: 4px; font-weight: 600; text-transform: uppercase; }
+        #msgErroLogin { display: none; color: var(--danger); font-size: 13px; margin-bottom: 15px; font-weight: bold; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px; border: 1px solid var(--danger); }
+
+        #appContainer, #adminPanel { display: none; width: 100%; max-width: 1000px; padding: 20px; position: relative; z-index: 10; }
+        #adminPanel { max-width: 1200px; }
+        
+        nav { display: flex; flex-direction: column; align-items: flex-start; background-color: var(--card-bg); padding: 15px 20px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px; gap: 15px; transition: all 0.5s ease; }
+        .nav-header { display: flex; width: 100%; justify-content: center; align-items: center; gap: 10px; }
+        .nav-header svg { width: 40px; height: 40px; filter: drop-shadow(0 0 5px rgba(139,92,246,0.5)); }
+        .nav-header h2 { color: var(--text-main); font-weight: 800; letter-spacing: 1px; font-size: 20px; }
+        
+        .nav-links { position: relative; display: flex; gap: 5px; width: 100%; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 5px; scrollbar-width: none; }
+        .nav-links::-webkit-scrollbar { display: none; }
+        .nav-indicator { position: absolute; top: 0; left: 0; height: calc(100% - 5px); background: rgba(139, 92, 246, 0.15); border-radius: 6px; transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); z-index: 0; border: 1px solid rgba(139, 92, 246, 0.3); }
+        .nav-links a { position: relative; z-index: 1; flex-shrink: 0; white-space: nowrap; color: var(--text-muted); text-decoration: none; font-weight: 500; cursor: pointer; transition: 0.3s; padding: 6px 15px; border-radius: 6px; font-size: 13px; }
+        .nav-links a.active { color: var(--neon-lupus); font-weight: 700; text-shadow: 0 0 10px rgba(139,92,246,0.5); }
+        .nav-links a:hover:not(.active) { color: var(--text-main); }
+
+        .aba-conteudo { display: none; }
+        .aba-conteudo.ativa { display: block; animation: slideIn 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(15px); } to { opacity: 1; transform: translateX(0); } }
+
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; border: 1px solid; margin-top: 10px; transition: 0.3s; }
+        .status-online { color: #10b981; border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.1); }
+        .status-offline { color: #71717a; border-color: rgba(113, 113, 122, 0.3); background: rgba(113, 113, 122, 0.1); }
+        .status-treinando { color: var(--gold); border-color: rgba(251, 191, 36, 0.4); background: rgba(251, 191, 36, 0.15); animation: pulseTreino 1.5s infinite; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .dot-online { background-color: #10b981; box-shadow: 0 0 8px #10b981; }
+        .dot-offline { background-color: #71717a; }
+        .dot-treinando { background-color: var(--gold); box-shadow: 0 0 8px var(--gold); }
+        @keyframes pulseTreino { 0% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.5); } 70% { box-shadow: 0 0 0 8px rgba(251, 191, 36, 0); } 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); } }
+
+        .user-status-global { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; padding: 2px 8px; border-radius: 4px; transition: 0.3s; margin-left: 10px; vertical-align: middle;}
+        .user-status-global.online { color: #10b981; background: rgba(16, 185, 129, 0.1); }
+        .user-status-global.treinando { color: var(--gold); background: rgba(251, 191, 36, 0.15); animation: pulseTreino 1.5s infinite; border-radius: 50px; padding: 4px 12px; }
+
+        .streak-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 800; color: var(--fire); background: rgba(255, 87, 34, 0.15); border: 1px solid rgba(255, 87, 34, 0.4); padding: 4px 12px; border-radius: 50px; margin-left: 10px; vertical-align: middle; text-shadow: 0 0 10px rgba(255, 87, 34, 0.6); }
+
+        .dash-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 25px; gap: 10px; transition: all 0.5s ease; }
+        .relogio-box { text-align: right; flex-shrink: 0; }
+        .relogio-data { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;}
+        .relogio-hora { font-size: 24px; font-weight: 800; color: var(--neon-lupus); font-variant-numeric: tabular-nums; line-height: 1; }
+        
+        .xp-wrapper { display: flex; flex-direction: column; align-items: flex-start; }
+        .badge-xp-header { display: inline-flex; align-items: center; gap: 8px; background-color: var(--bg-dark); border: 1px solid var(--neon-lupus); padding: 8px 18px; border-radius: 50px; margin-top: 15px; box-shadow: 0 0 15px rgba(139, 92, 246, 0.1); transition: all 0.2s ease; }
+        .badge-xp-header.pulsar-xp { animation: xpGlow 0.4s ease-out; }
+        @keyframes xpGlow { 0% { transform: scale(1); box-shadow: 0 0 15px rgba(139, 92, 246, 0.1); border-color: var(--neon-lupus); } 50% { transform: scale(1.1); box-shadow: 0 0 30px rgba(251, 191, 36, 0.8); border-color: var(--gold); } 100% { transform: scale(1); box-shadow: 0 0 15px rgba(139, 92, 246, 0.1); border-color: var(--neon-lupus); } }
+        .badge-xp-header .b-icon { color: var(--gold); font-size: 15px; }
+        .badge-xp-header .b-xp { color: var(--text-main); font-weight: 700; font-size: 14px; font-variant-numeric: tabular-nums; }
+        .badge-xp-header .b-patente { color: var(--gold); font-weight: 800; font-size: 14px; text-transform: uppercase; margin-left: 5px; }
+
+        .xp-progress-container { width: 100%; max-width: 220px; background: #1a1a1e; height: 6px; border-radius: 10px; margin-top: 10px; overflow: hidden; border: 1px solid var(--border-color); }
+        .xp-progress-fill { height: 100%; background: linear-gradient(90deg, var(--neon-lupus), var(--gold)); width: 0%; transition: width 0.5s ease; box-shadow: 0 0 10px rgba(251, 191, 36, 0.5); }
+
+        .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background-color: var(--card-bg); border-radius: 16px; border: 1px solid var(--border-color); padding: 25px; transition: box-shadow 0.2s ease, filter 0.5s ease, opacity 0.5s ease; position: relative; z-index: 1;}
+        .card h3 { font-size: 16px; color: var(--text-muted); margin-bottom: 20px; font-weight: 600; text-transform: uppercase; }
+        .full-card { grid-column: 1 / -1; }
+
+        button { width: 100%; padding: 14px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s ease; margin-bottom: 10px; font-size: 15px; }
+        button:active { transform: scale(0.96); } 
+        .btn-primary { background-color: var(--neon-lupus); color: white; }
+        .btn-primary:hover { background-color: var(--neon-hover); box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); }
+        .btn-start { background-color: var(--timer-color); color: #000; font-weight: 800; text-transform: uppercase; }
+        .btn-start:hover { box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .btn-end { background-color: var(--danger); color: white; font-weight: 800; text-transform: uppercase; display: none; }
+        .btn-secondary { background-color: transparent; border: 1px solid var(--border-color); color: var(--text-main); }
+        .btn-secondary:hover { background-color: #27272a; }
+        
+        .btn-fechar { position: absolute; top: 15px; right: 15px; background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: var(--danger); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; margin: 0; font-weight: bold; font-size: 14px; transition: 0.3s; z-index: 10;}
+        .btn-fechar:hover { background: var(--danger); color: white; transform: scale(1.1); box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+
+        .input-group { margin-bottom: 15px; text-align: left; position: relative; }
+        .input-group label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 5px; transition: color 0.3s; }
+        input[type="text"], input[type="number"], input[type="password"], input[type="date"], select, textarea { width: 100%; background-color: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 12px 15px; border-radius: 8px; outline: none; transition: all 0.3s ease; }
+        
+        .login-box input { border: none; border-bottom: 2px solid var(--border-color); border-radius: 0; background: transparent; padding: 10px 5px; }
+        .login-box input:focus { border-bottom: 2px solid var(--neon-lupus); box-shadow: 0 10px 10px -10px rgba(139,92,246,0.5); }
+        
+        input:focus, select:focus, textarea:focus { border-color: var(--neon-lupus); box-shadow: 0 0 10px rgba(139, 92, 246, 0.2); }
+        input:focus + label, select:focus + label { color: var(--neon-lupus); }
+        
+        .kg-input-wrapper { display: flex; align-items: center; background-color: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; transition: all 0.3s ease; }
+        .kg-input-wrapper:focus-within { border-color: var(--neon-lupus); box-shadow: 0 0 10px rgba(139, 92, 246, 0.2); }
+        .kg-input-wrapper input { border: none; border-radius: 0; box-shadow: none; }
+        .kg-input-wrapper span { padding: 0 15px; color: var(--text-muted); font-weight: 600; background-color: #1f1f22; height: 100%; display: flex; align-items: center; }
+        
+        .checkbox-wrapper { padding: 10px; background: var(--bg-dark); border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 10px; }
+        .checkbox-wrapper.falha-ativa { border-color: var(--danger); background: rgba(239, 68, 68, 0.1); animation: pulseFlame 1.5s infinite; }
+        .checkbox-wrapper label { color: white; margin: 0; cursor: pointer; pointer-events: none; font-weight: 600; transition: color 0.3s; }
+        .checkbox-wrapper.falha-ativa label { color: var(--danger); text-shadow: 0 0 5px rgba(239,68,68,0.5); }
+
+        .timer-display { font-size: 40px; font-weight: 800; text-align: center; color: var(--text-muted); margin-bottom: 15px; font-variant-numeric: tabular-nums; transition: color 0.5s; }
+        .timer-display.rodando { color: var(--timer-color); text-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        
+        #containerRegistros { opacity: 0.4; pointer-events: none; transition: opacity 0.4s ease; display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+        #containerRegistros.destravado { opacity: 1 !important; pointer-events: auto !important; }
+        .bloco-registro { background: #151518; border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); }
+        .bloco-registro h4 { color: var(--neon-lupus); font-size: 14px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        #feedbackSessaoAtual { display: none; flex-direction: column; gap: 10px; margin-top: 15px; padding: 15px; background: #151518; border-radius: 8px; border: 1px dashed var(--neon-lupus); animation: fadeIn 0.4s ease; }
+
+        .hist-group { background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 15px; overflow: hidden; transition: all 0.3s ease; }
+        .hist-group-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #1a1a1e; font-weight: 600; font-size: 14px; transition: 0.3s; }
+        .hist-group-header:hover { background: #27272a; }
+        .hist-group-body { padding: 15px; display: none; border-top: 1px solid var(--border-color); flex-direction: column; gap: 10px; animation: fadeIn 0.3s ease; }
+        .hist-item { background: var(--card-bg); border-radius: 6px; padding: 12px; font-size: 13px; border-left: 4px solid var(--neon-lupus); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .hist-item span { color: var(--text-main); font-weight: bold; }
+        .hist-item .destaque { color: var(--neon-lupus); font-weight: 600; }
+
+        .patentes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; margin-bottom: 40px; }
+        .patente-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; text-align: center; transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .patente-card.ativa { border-color: var(--bronze); background: rgba(217, 119, 6, 0.05); }
+        .patente-card.ativa::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.1), rgba(251, 191, 36, 0.6), rgba(251, 191, 36, 0.1), transparent); transform: skewX(-25deg); animation: sweepDourado 4s infinite; pointer-events: none; }
+        @keyframes sweepDourado { 0% { left: -100%; } 20% { left: 200%; } 100% { left: 200%; } }
+        .patente-card.bloqueada { opacity: 0.5; background: var(--bg-dark); border-color: var(--border-color); }
+        
+        .conquistas-list { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .conquista-card { display: flex; align-items: center; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; gap: 15px; transition: all 0.3s ease; }
+        .conquista-card.ativa { border-color: var(--gold); background: rgba(251, 191, 36, 0.05); }
+        .conquista-card.bloqueada { opacity: 0.4; filter: grayscale(100%); }
+        .conquista-icon { font-size: 30px; background: var(--card-bg); width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; border-radius: 50%; border: 1px solid var(--border-color); flex-shrink: 0; transition: all 0.3s ease; }
+        .conquista-card.ativa .conquista-icon { border-color: var(--gold); box-shadow: 0 0 10px rgba(251, 191, 36, 0.3); transform: scale(1.1); }
+        .conquista-info h4 { font-size: 14px; color: var(--text-main); margin-bottom: 2px; }
+        .conquista-info p { font-size: 11px; color: var(--text-muted); }
+        .badge-dificuldade { font-size: 10px; padding: 2px 6px; border-radius: 4px; border: 1px solid; margin-top: 5px; display: inline-block; text-transform: uppercase; font-weight: bold; }
+        .badge-facil { color: #34d399; border-color: #34d399; }
+        .badge-media { color: #fbbf24; border-color: #fbbf24; }
+        .badge-dificil { color: #ef4444; border-color: #ef4444; }
+
+        #toastContainer {
+            position: fixed; top: -150px; right: 20px; z-index: 9999; background: linear-gradient(135deg, var(--card-bg), #2a1e05); border: 1px solid var(--gold); border-left: 5px solid var(--gold);
+            padding: 15px 20px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); display: flex; align-items: center; gap: 15px; min-width: 300px;
+            opacity: 0; pointer-events: none; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+        #toastContainer.mostrar { transform: translateY(170px); opacity: 1; pointer-events: auto; }
+        .toast-icon { font-size: 35px; animation: bounce 1s infinite alternate; }
+        @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-5px); } }
+        .toast-info h4 { color: var(--gold); font-size: 14px; text-transform: uppercase; margin-bottom: 2px; letter-spacing: 1px; }
+        .toast-info p { color: var(--text-main); font-size: 12px; font-weight: bold; }
+
+        #toastAlerta {
+            position: fixed; top: -150px; left: 50%; transform: translateX(-50%); z-index: 10000;
+            background: linear-gradient(135deg, #18181b, #3a0a0a); border: 1px solid var(--danger); border-left: 5px solid var(--danger);
+            padding: 15px 20px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); display: flex; align-items: center; gap: 15px; width: 90%; max-width: 400px;
+            color: white; font-size: 14px; font-weight: 600; text-align: left; opacity: 0; pointer-events: none; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #toastAlerta.mostrar { top: 20px; opacity: 1; pointer-events: auto; }
+
+        .rede-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+        .membro-card { background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; align-items: center; }
+        .membro-card:hover { transform: translateY(-5px); border-color: var(--neon-lupus); box-shadow: 0 5px 15px rgba(139,92,246,0.2); }
+        .membro-card h4 { font-size: 15px; margin-top: 5px; color: var(--text-main); }
+        .avatar-mini { width: 60px; height: 60px; background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 5px; }
+        .avatar-mini svg { width: 40px; height: 40px; }
+
+        #modalPerfilJogador .modal-content { max-width: 450px; background: linear-gradient(180deg, #1f1f22, #09090b); border: 1px solid var(--neon-lupus); padding: 0; overflow: hidden; position: relative; }
+        .perfil-ff-header { padding: 35px 20px 20px; text-align: center; background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png') var(--card-bg); position: relative; border-bottom: 2px solid var(--neon-lupus); }
+        .perfil-ff-avatar { width: 90px; height: 90px; background: var(--bg-dark); border: 3px solid var(--neon-lupus); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; box-shadow: 0 0 20px rgba(139, 92, 246, 0.5); }
+        .perfil-ff-avatar svg { width: 60px; height: 60px; }
+        .perfil-ff-body { padding: 20px; text-align: left; }
+        .perfil-ff-bio { font-style: italic; color: var(--text-muted); font-size: 13px; text-align: center; margin-bottom: 20px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px; border-left: 3px solid var(--timer-color); }
+        .perfil-ff-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .ff-stat-box { background: var(--bg-dark); border: 1px solid var(--border-color); padding: 10px 5px; border-radius: 8px; text-align: center; }
+        .ff-stat-box span { display: block; font-size: 22px; font-weight: 800; color: var(--neon-lupus); }
+
+        .admin-header { background: linear-gradient(90deg, #18181b, #2a0a4a); border-left: 5px solid var(--neon-lupus); padding: 20px; border-radius: 12px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
+        .admin-header h1 { color: white; font-weight: 800; font-size: 22px; }
+        .member-list { display: flex; flex-direction: column; gap: 10px; max-height: 500px; overflow-y: auto; padding-right: 5px; }
+        .member-card { display: flex; justify-content: space-between; align-items: center; background: var(--bg-dark); border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; }
+        .member-info h4 { color: var(--neon-lupus); font-size: 16px; margin-bottom: 2px; text-transform: capitalize; display: flex; align-items: center; gap: 10px; }
+        .btn-adm { padding: 8px 12px; font-size: 12px; width: auto; margin: 0; font-weight: bold; border-radius: 6px; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; z-index: 1000; animation: fadeIn 0.2s ease; }
+        .modal-content { background: var(--card-bg); padding: 30px; border-radius: 16px; border: 1px solid var(--border-color); text-align: center; max-width: 400px; width: 90%; transform: scale(0.9); animation: scaleUp 0.2s ease forwards; position: relative; }
+        @keyframes scaleUp { to { transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .chart-card { height: 350px; }
+
+
+        /* ==========================================
+           NOVAS ANIMAÇÕES ÉPICAS 
+           ========================================== */
+
+        /* 1. TELA DE TREINO CONCLUÍDO (DARK / CYBERPUNK) */
+        #treinoConcluidoOverlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(circle at center, #1b0e35 0%, #020202 100%);
+            z-index: 100000; display: none; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; transition: opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+            overflow: hidden;
+        }
+
+        /* GRID ANIMADA 3D NO FUNDO DA TELA DE CONCLUSAO */
+        .cyber-grid {
+            position: absolute; width: 200%; height: 200%; top: -50%; left: -50%;
+            background-image:
+                linear-gradient(rgba(139, 92, 246, 0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(139, 92, 246, 0.15) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: perspective(600px) rotateX(60deg);
+            animation: gridMove 8s linear infinite;
+            z-index: 0; opacity: 0.5; pointer-events: none;
+        }
+        @keyframes gridMove { 
+            0% { transform: perspective(600px) rotateX(60deg) translateY(0); } 
+            100% { transform: perspective(600px) rotateX(60deg) translateY(50px); } 
+        }
+        
+        .tc-content {
+            text-align: center; z-index: 1;
+            width: 100%; max-width: 600px; padding: 20px; position: relative;
+        }
+        
+        .tc-header { position: relative; margin-bottom: 40px; }
+        
+        /* Efeito do título "Pancada" na tela */
+        .tc-title {
+            font-size: 50px; font-weight: 900; color: white;
+            text-transform: uppercase; letter-spacing: 2px;
+            text-shadow: 0 0 20px rgba(139, 92, 246, 0.5), 0 0 40px rgba(139, 92, 246, 0.2);
+            margin-bottom: 5px; line-height: 1; position: relative;
+            opacity: 0; /* Começa invisível pra animação */
+        }
+        
+        .tc-title.show-title {
+            animation: stampText 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes stampText {
+            0% { transform: scale(3); opacity: 0; filter: blur(10px); }
+            50% { transform: scale(0.9); opacity: 1; filter: blur(0px); }
+            100% { transform: scale(1); opacity: 1; filter: blur(0px); }
+        }
+
+        .tc-subtitle {
+            font-size: 16px; color: var(--text-muted); font-weight: 500; letter-spacing: 6px; 
+            text-transform: uppercase; margin-top: 15px;
+            animation: fadeInSub 1.5s forwards 0.8s; opacity: 0;
+        }
+        @keyframes fadeInSub { to { opacity: 1; } }
+
+        .tc-stats {
+            display: flex; gap: 15px; justify-content: center; margin-bottom: 25px; flex-wrap: wrap; 
+            perspective: 1000px; 
+        }
+        
+        .tc-stat-box {
+            background: rgba(9, 9, 11, 0.8); border: 1px solid rgba(139, 92, 246, 0.2);
+            padding: 25px 20px; border-radius: 12px; min-width: 140px; flex: 1;
+            position: relative; overflow: hidden; backdrop-filter: blur(10px);
+            opacity: 0; transform: rotateX(-30deg) translateY(30px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+        
+        .tc-stat-box.show-box {
+            animation: popBox 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes popBox {
+            to { opacity: 1; transform: rotateX(0) translateY(0); }
+        }
+        
+        .tc-stat-box::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.15), transparent);
+            transform: skewX(-25deg); animation: sweepLight 3s infinite;
+        }
+        @keyframes sweepLight { 0% { left: -100%; } 20% { left: 200%; } 100% { left: 200%; } }
+
+        .tc-stat-value { font-size: 38px; font-weight: 900; display: block; margin-bottom: 2px; text-shadow: 0 0 15px currentColor; filter: brightness(1.2); }
+        
+        /* Efeito piscar quando o número para de contar */
+        .tc-stat-value.flash {
+            animation: flashNum 0.4s ease-out;
+        }
+        @keyframes flashNum {
+            0% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.2); filter: brightness(2); text-shadow: 0 0 30px currentColor; }
+            100% { transform: scale(1); filter: brightness(1.2); }
+        }
+
+        .tc-stat-label { font-size: 11px; color: #a1a1aa; text-transform: uppercase; letter-spacing: 2px; font-weight: bold; }
+        
+        .c-time { color: #f4f4f5; }
+        .c-vol { color: #f4f4f5; }
+        .c-xp { color: var(--neon-lupus); }
+        .c-streak { color: var(--fire); }
+
+        .btn-tc-close { 
+            background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); 
+            padding: 15px 30px; font-size: 14px; text-transform: uppercase; letter-spacing: 2px; 
+            margin-top: 20px; transition: 0.3s;
+        }
+        .btn-tc-close:hover { 
+            border-color: var(--neon-lupus); color: white; box-shadow: 0 0 20px rgba(139, 92, 246, 0.3); background: rgba(139, 92, 246, 0.1); 
+        }
+
+        
+        /* 2. TELA DE EVOLUÇÃO DE PATENTE (LEVEL UP) */
+        #levelUpOverlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(circle, rgba(251, 191, 36, 0.3) 0%, rgba(5, 5, 5, 0.98) 70%);
+            z-index: 100001; display: none; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; transition: opacity 0.5s ease;
+        }
+        .lu-content {
+            text-align: center; transform: translateY(100px) scale(0.5); opacity: 0;
+            transition: all 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .lu-content.show {
+            transform: translateY(0) scale(1); opacity: 1;
+        }
+        .lu-icon {
+            font-size: 130px; margin-bottom: 20px;
+            filter: drop-shadow(0 0 40px var(--gold));
+            animation: floatIcon 2s ease-in-out infinite alternate;
+        }
+        @keyframes floatIcon { 
+            from { transform: translateY(0) scale(1); filter: drop-shadow(0 0 30px var(--gold)); } 
+            to { transform: translateY(-20px) scale(1.1); filter: drop-shadow(0 0 60px var(--gold)); } 
+        }
+        .lu-title {
+            font-size: 30px; font-weight: 800; color: var(--gold); text-transform: uppercase;
+            text-shadow: 0 0 20px rgba(251, 191, 36, 0.6); margin-bottom: 5px; letter-spacing: 2px;
+        }
+        .lu-patente {
+            font-size: 70px; font-weight: 900; color: white; text-transform: uppercase;
+            letter-spacing: 5px; -webkit-text-stroke: 1px var(--gold); text-shadow: 0 0 30px var(--gold);
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) { 
+            .main-grid { grid-template-columns: 1fr; } 
+            .conquistas-list { grid-template-columns: 1fr; }
+            .member-card { flex-direction: column; align-items: flex-start; gap: 15px; }
+            #toastContainer { right: 10px; left: 10px; min-width: auto; }
+            .relogio-hora { font-size: 20px; } 
+            .tc-title { font-size: 40px; }
+            .tc-stat-value { font-size: 30px; }
+            .lu-patente { font-size: 45px; }
+        }
+
+        .svg-lobo { fill: none; }
+    </style>
+</head>
+<body>
+
+    <!-- FUNDO MALHA NEURAL GLOBAL -->
+    <canvas id="particles-canvas"></canvas>
+
+    <!-- FUNDO AMBIENTE INTERNO -->
+    <div id="ambientBg" class="ambient-bg">
+        <div class="spin-bg"></div>
+    </div>
+
+    <!-- TELA DE TRANSIÇÃO -->
+    <div id="transitionOverlay">
+        <div class="glitch-wrapper">
+            <svg class="logo-wolf-transition svg-lobo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="wolfGradProfile" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:var(--neon-hover); stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:var(--neon-lupus); stop-opacity:1" />
+                    </linearGradient>
+                    <linearGradient id="wolfGradDark" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#4c1d95; stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#09090b; stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <polygon points="15,40 30,5 45,25" fill="url(#wolfGradProfile)" />
+                <polygon points="22,25 30,5 38,22" fill="#09090b" />
+                <polygon points="15,40 45,25 60,45" fill="url(#wolfGradDark)" />
+                <polygon points="45,25 75,35 95,50 70,55 60,45" fill="url(#wolfGradProfile)" />
+                <polygon points="15,40 60,45 70,55 50,80 20,90" fill="#121215" />
+                <polygon points="70,55 95,50 85,65 65,65 50,80" fill="url(#wolfGradDark)" />
+                <polygon points="95,50 88,48 88,55" fill="#000000" />
+                <polygon points="55,38 68,40 60,44" fill="var(--gold)" filter="drop-shadow(0 0 4px var(--gold))" />
+                <polygon points="85,65 82,72 78,65" fill="#f4f4f5" />
+            </svg>
+            <div class="loading-text">Sincronizando Alcatéia...</div>
+            <div class="progress-bar-transition"><div class="progress-fill-transition"></div></div>
+        </div>
+    </div>
+
+    <!-- TOASTS -->
+    <div id="toastAlerta"><span style="font-size: 20px;">⚠️</span><span id="toastAlertaTexto">Erro!</span></div>
+    <div id="toastContainer"><div class="toast-icon" id="toastIcon">🏆</div><div class="toast-info"><h4>Conquista Desbloqueada</h4><p id="toastTitulo">Nome</p><span id="toastXp">+0 XP</span></div></div>
+
+    <!-- TELA DE LOGIN -->
+    <div id="loginScreen">
+        <div class="login-wrapper">
+            <div class="login-box">
+                <svg class="logo-wolf svg-lobo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="wolfGradLogin" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:var(--neon-hover); stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:var(--neon-lupus); stop-opacity:1" />
+                        </linearGradient>
+                        <linearGradient id="wolfGradDark2" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#4c1d95; stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#09090b; stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <polygon points="15,40 30,5 45,25" fill="url(#wolfGradLogin)" />
+                    <polygon points="22,25 30,5 38,22" fill="#09090b" />
+                    <polygon points="15,40 45,25 60,45" fill="url(#wolfGradDark2)" />
+                    <polygon points="45,25 75,35 95,50 70,55 60,45" fill="url(#wolfGradLogin)" />
+                    <polygon points="15,40 60,45 70,55 50,80 20,90" fill="#121215" />
+                    <polygon points="70,55 95,50 85,65 65,65 50,80" fill="url(#wolfGradDark2)" />
+                    <polygon points="95,50 88,48 88,55" fill="#000000" />
+                    <polygon points="55,38 68,40 60,44" fill="var(--gold)" filter="drop-shadow(0 0 4px var(--gold))" />
+                    <polygon points="85,65 82,72 78,65" fill="#f4f4f5" />
+                </svg>
+                <h1>LUPUS</h1>
+                <p class="subtitle">ACADEMY</p>
+                <div id="msgErroLogin">Acesso Inválido!</div>
+                <div class="input-group"><input type="text" id="loginUser" placeholder="Usuário"></div>
+                <div class="input-group"><input type="password" id="loginPass" placeholder="Senha"></div>
+                <button class="btn-primary" style="margin-top: 10px;" onclick="entrar()">Acessar Sistema</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAINEL ADM (ALPHA) -->
+    <div id="adminPanel">
+        <div class="admin-header">
+            <div><h1>Painel do Alpha</h1><p style="color: var(--text-muted); font-size: 13px;">Gestão de Contas e Punições</p></div>
+            <button class="btn-secondary" style="width: auto; padding: 10px 20px; margin:0;" onclick="sairParaLogin()">Sair do Painel</button>
+        </div>
+        <div class="main-grid">
+            <div class="card">
+                <h3>Gerar Acesso (Membro)</h3>
+                <div class="input-group"><label>Nome / Apelido</label><input type="text" id="novoNome" placeholder="Ex: Atleta123"></div>
+                <div class="input-group"><label>Usuário de Login</label><input type="text" id="novoUser" placeholder="Ex: atleta"></div>
+                <div class="input-group"><label>Senha Inicial</label><input type="password" id="novaSenha" placeholder="Senha"></div>
+                <button class="btn-primary" onclick="criarMembro()">Criar Conta na Alcatéia</button>
+            </div>
+            <div class="card">
+                <h3>Gestão de Memembros</h3>
+                <div class="member-list" id="listaMembrosAdm"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP PRINCIPAL -->
+    <div id="appContainer">
+        
+        <nav>
+            <div class="nav-header">
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="wolfGradNav" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:var(--neon-hover); stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:var(--neon-lupus); stop-opacity:1" />
+                        </linearGradient>
+                        <linearGradient id="wolfGradDarkNav" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#4c1d95; stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#09090b; stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <polygon points="15,40 30,5 45,25" fill="url(#wolfGradNav)" />
+                    <polygon points="22,25 30,5 38,22" fill="#09090b" />
+                    <polygon points="15,40 45,25 60,45" fill="url(#wolfGradDarkNav)" />
+                    <polygon points="45,25 75,35 95,50 70,55 60,45" fill="url(#wolfGradNav)" />
+                    <polygon points="15,40 60,45 70,55 50,80 20,90" fill="#121215" />
+                    <polygon points="70,55 95,50 85,65 65,65 50,80" fill="url(#wolfGradDarkNav)" />
+                    <polygon points="95,50 88,48 88,55" fill="#000000" />
+                    <polygon points="55,38 68,40 60,44" fill="var(--gold)" filter="drop-shadow(0 0 4px var(--gold))" />
+                    <polygon points="85,65 82,72 78,65" fill="#f4f4f5" />
+                </svg>
+                <h2>LUPUS</h2>
+            </div>
+            <div class="nav-links" id="navLinksBox">
+                <div class="nav-indicator" id="navIndicator"></div>
+                <a class="active" onclick="mudarAba('dashboard', this)">Treino</a>
+                <a onclick="mudarAba('historico', this)">Histórico</a>
+                <a onclick="mudarAba('dieta', this)">Dieta</a>
+                <a onclick="mudarAba('matilha', this)">Matilha</a>
+                <a onclick="mudarAba('patentes', this)">Patentes</a>
+                <a onclick="mudarAba('perfil', this)">Perfil</a>
+            </div>
+            <button class="btn-secondary" style="width: 100%; margin: 0; padding: 10px; font-size: 13px; border-color: rgba(239, 68, 68, 0.4); color: var(--danger);" onclick="sairParaLogin()">Sair do Sistema</button>
+        </nav>
+
+        <!-- DASHBOARD -->
+        <div id="dashboard" class="aba-conteudo ativa">
+            <div class="dash-header">
+                <div>
+                    <div style="display: flex; align-items: center;">
+                        <h1 style="font-size: 24px;">Olá, <span id="displayApelidoNome" style="color: var(--neon-lupus);">Atleta</span></h1>
+                        <div class="user-status-global online" id="meuStatusGlobal"><span class="dot dot-online" id="meuStatusDot"></span> <span id="meuStatusTexto">Online</span></div>
+                        <div class="streak-badge" id="meuStreakGlobal" style="display:none;">🔥 <span id="meuStreakTexto">0</span></div>
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 14px;">Pronto pra treinar, campeão(a)?</p>
+                    
+                    <div class="xp-wrapper">
+                        <div class="badge-xp-header" id="badgeXpHeader">
+                            <span class="b-icon">⚡</span>
+                            <span class="b-xp"><span id="displayXP">0</span> XP</span>
+                            <span class="b-patente" id="displayPatenteTop">BRONZE</span>
+                        </div>
+                        <div class="xp-progress-container" title="Progresso para a próxima patente">
+                            <div class="xp-progress-fill" id="xpProgressBar"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="relogio-box">
+                    <div class="relogio-data" id="dataAtual">--</div>
+                    <div class="relogio-hora" id="horaAtual">--:--:--</div>
+                </div>
+            </div>
+
+            <div class="main-grid">
+                
+                <div class="card full-card">
+                    <h3>Sessão Atual</h3>
+                    <div class="timer-display" id="displayCronometro">00:00:00</div>
+                    <button class="btn-start" id="btnIniciarTreino" onclick="iniciarTreino()">🔥 Iniciar Treino</button>
+                    <button class="btn-end" id="btnEncerrarTreino" onclick="tentarEncerrar()">⏹ Encerrar Treino</button>
+                    <div id="feedbackSessaoAtual"></div>
+                </div>
+
+                <div id="containerRegistros" class="full-card">
+                    <div class="bloco-registro">
+                        <h4>🏋️ Registrar Série (+1 XP)</h4>
+                        <div class="input-group"><input type="text" id="regMuscNome" placeholder="Máquina/Exercício (Ex: Supino)"></div>
+                        <div style="display: flex; gap: 10px;">
+                            <div class="input-group" style="flex: 1;"><div class="kg-input-wrapper"><input type="text" inputmode="decimal" id="regMuscCarga" placeholder="Carga" oninput="this.value = this.value.replace(/[^0-9.,]/g, '');"><span>KG</span></div></div>
+                            <div class="input-group" style="flex: 1;"><input type="text" inputmode="numeric" id="regMuscReps" placeholder="Reps" oninput="this.value = this.value.replace(/[^0-9]/g, '');"></div>
+                        </div>
+                        <div class="checkbox-wrapper" id="boxFalha" onclick="toggleFalha()">
+                            <input type="checkbox" id="regMuscFalha" style="pointer-events: none;"><label style="color:white; font-size: 13px; pointer-events: none;">Fui até a falha!</label>
+                        </div>
+                        <button class="btn-primary" style="margin-bottom:0;" onclick="registrarMusculacao()">Anotar Série</button>
+                    </div>
+
+                    <div class="bloco-registro">
+                        <h4>🏃 Registrar Cardio (+1 XP)</h4>
+                        <div style="display: flex; gap: 10px;">
+                            <div class="input-group" style="flex: 2;"><input type="text" id="regCardioNome" placeholder="Ex: Esteira, Bicicleta"></div>
+                            <!-- Agora aceita apenas números, vírgulas, pontos e as letras k, m e h -->
+                            <div class="input-group" style="flex: 1;"><input type="text" id="regCardioTempo" placeholder="Ex: 30m, 5km" oninput="this.value = this.value.replace(/[^0-9kmKMhH.,]/g, '');"></div>
+                        </div>
+                        <button class="btn-primary" style="margin-bottom:0;" onclick="registrarCardio()">Anotar Cardio</button>
+                    </div>
+
+                    <div class="bloco-registro">
+                        <h4>🤸 Exercício Livre (+1 XP)</h4>
+                        <div style="display: flex; gap: 10px;">
+                            <div class="input-group" style="flex: 2;"><input type="text" id="regLivreNome" placeholder="Ex: Flexão, Abdominal"></div>
+                            <div class="input-group" style="flex: 1;"><input type="text" inputmode="numeric" id="regLivreQtd" placeholder="Qtd" oninput="this.value = this.value.replace(/[^0-9]/g, '');"></div>
+                        </div>
+                        <button class="btn-primary" style="margin-bottom:0;" onclick="registrarLivre()">Anotar Exercício</button>
+                    </div>
+                </div>
+
+                <div class="card full-card chart-card" style="margin-top: 20px;">
+                    <h3>Desempenho Geral e XP (Tendência)</h3>
+                    <canvas id="evolucaoChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA: HISTÓRICO -->
+        <div id="historico" class="aba-conteudo">
+            <div class="card">
+                <h3>Histórico de Treinos e Séries</h3>
+                <div id="listaHistoricoAgrupado"><p id="msgHistoricoVazio" style="color: var(--text-muted); text-align: center; padding: 20px 0;">Nenhum treino finalizado.</p></div>
+            </div>
+        </div>
+
+        <!-- ABA: DIETA -->
+        <div id="dieta" class="aba-conteudo">
+            <div class="main-grid">
+                <div class="card full-card" style="margin-bottom: 0;">
+                    <h3>Registrar Refeição (+1 XP)</h3>
+                    <textarea id="textoRefeicoes" rows="3" placeholder="Ex: 2 ovos mexidos, pão integral e café sem açúcar..."></textarea>
+                    <button class="btn-primary" style="margin-top: 15px;" onclick="salvarRefeicaoDia()">Salvar Refeição</button>
+                </div>
+                <div class="card full-card">
+                    <h3>Diário de Alimentação</h3>
+                    <div id="listaHistoricoDieta"><p id="msgDietaVazia" style="color: var(--text-muted); text-align: center; padding: 20px 0;">Dieta vazia.</p></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA MATILHA -->
+        <div id="matilha" class="aba-conteudo">
+            <div class="card full-card">
+                <h3>Membros da Matilha</h3>
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Inspecione o status e o rendimento dos seus parceiros.</p>
+                <div class="rede-grid" id="gridMatilha"></div>
+            </div>
+        </div>
+
+        <!-- ABA: PATENTES E CONQUISTAS -->
+        <div id="patentes" class="aba-conteudo">
+            <div class="card">
+                <h3 style="margin-bottom: 20px;">Caminho da Patente</h3>
+                <div class="patentes-grid" id="gridPatentes"></div>
+                <hr style="border-color: var(--border-color); margin: 30px 0;">
+                <h3 style="margin-bottom: 20px;">Mural de Conquistas (Bônus de XP)</h3>
+                <div class="conquistas-list" id="gridConquistas"></div>
+            </div>
+        </div>
+
+        <!-- ABA: PERFIL PRIVADO E CONFIGURAÇÕES -->
+        <div id="perfil" class="aba-conteudo">
+            <div class="card">
+                <h3>Editar Perfil Público</h3>
+                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">Essas informações aparecerão para a Matilha.</p>
+
+                <div class="input-group">
+                    <label>Foco / Objetivo Principal</label>
+                    <select id="inputBio"><option value="Hipertrofia Muscular">Hipertrofia Muscular</option><option value="Emagrecimento">Emagrecimento</option><option value="Definição Muscular">Definição Muscular</option><option value="Condicionamento Físico">Condicionamento Físico</option><option value="Ganho de Força">Ganho de Força</option><option value="Saúde e Bem-estar">Saúde e Bem-estar</option></select>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="input-group"><label>Apelido / Nome Curto</label><input type="text" id="inputApelidoPerfil"></div>
+                    <div class="input-group"><label>Nome Completo</label><input type="text" id="inputNomeCompleto" placeholder="Preencha seu nome"></div>
+                </div>
+
+                <div class="input-group"><label>Data de Nascimento</label><input type="date" id="inputNasc"></div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="input-group"><label>Peso (KG)</label><input type="number" id="inputPeso"></div>
+                    <div class="input-group"><label>Altura (M)</label><input type="text" id="inputAltura" placeholder="Ex: 1.75"></div>
+                </div>
+
+                <hr style="border-color: var(--border-color); margin: 15px 0;">
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Privacidade (Ocultar dados da Matilha)</p>
+                
+                <div style="display: flex; gap: 15px;">
+                    <div class="checkbox-wrapper" style="flex: 1;" onclick="document.getElementById('ocultarNome').click()">
+                        <input type="checkbox" id="ocultarNome" style="pointer-events: none;"><label style="color:white; font-size: 12px; pointer-events: none;">Ocultar Nome</label>
+                    </div>
+                    <div class="checkbox-wrapper" style="flex: 1;" onclick="document.getElementById('ocultarNasc').click()">
+                        <input type="checkbox" id="ocultarNasc" style="pointer-events: none;"><label style="color:white; font-size: 12px; pointer-events: none;">Ocultar Nascimento</label>
+                    </div>
+                </div>
+
+                <button class="btn-primary" style="margin-top: 10px;" onclick="salvarPerfil()">Salvar Alterações</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODAL PERFIL JOGADOR -->
+    <div id="modalPerfilJogador" class="modal-overlay">
+        <div class="modal-content">
+            <div class="perfil-ff-header">
+                <button class="btn-fechar" onclick="fecharModal('modalPerfilJogador')">X</button>
+                <div class="perfil-ff-avatar" id="modalJogadorAvatar">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="wolfGradModal" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:var(--neon-hover); stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:var(--neon-lupus); stop-opacity:1" />
+                            </linearGradient>
+                            <linearGradient id="wolfGradDarkModal" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#4c1d95; stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#09090b; stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <polygon points="15,40 30,5 45,25" fill="url(#wolfGradModal)" />
+                        <polygon points="22,25 30,5 38,22" fill="#09090b" />
+                        <polygon points="15,40 45,25 60,45" fill="url(#wolfGradDarkModal)" />
+                        <polygon points="45,25 75,35 95,50 70,55 60,45" fill="url(#wolfGradModal)" />
+                        <polygon points="15,40 60,45 70,55 50,80 20,90" fill="#121215" />
+                        <polygon points="70,55 95,50 85,65 65,65 50,80" fill="url(#wolfGradDarkModal)" />
+                        <polygon points="95,50 88,48 88,55" fill="#000000" />
+                        <polygon points="55,38 68,40 60,44" fill="var(--gold)" filter="drop-shadow(0 0 4px var(--gold))" />
+                        <polygon points="85,65 82,72 78,65" fill="#f4f4f5" />
+                    </svg>
+                </div>
+                
+                <div id="modalJogadorStatus" class="status-badge status-offline" style="margin: -5px auto 10px;"><span class="dot dot-offline"></span> OFFLINE</div>
+
+                <h2 id="modalJogadorApelido" style="color: white; margin-top: 0px; letter-spacing: 1px;">Apelido</h2>
+                <span id="modalJogadorPatente" style="background: var(--gold); color: black; padding: 3px 10px; border-radius: 20px; font-weight: bold; font-size: 12px; text-transform: uppercase;">PATENTE</span>
+            </div>
+            <div class="perfil-ff-body">
+                <div class="perfil-ff-bio" id="modalJogadorBio">Objetivo</div>
+                <div class="perfil-ff-stats">
+                    <div class="ff-stat-box"><span id="modalStatsTreinos">0</span><p>Treinos</p></div>
+                    <div class="ff-stat-box"><span id="modalStatsEx" style="color: var(--timer-color);">0</span><p>Exercícios</p></div>
+                </div>
+                <div class="ff-info-linha"><span>Nome Completo:</span> <strong id="modalInfoNome">Oculto</strong></div>
+                <div class="ff-info-linha"><span>Data de Nascimento:</span> <strong id="modalInfoNasc">Oculto</strong></div>
+                <div class="ff-info-linha"><span>Peso / Altura:</span> <strong id="modalInfoCorpo">-- / --</strong></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 1. NOVA TELA: TREINO CONCLUÍDO (DARK / CYBERPUNK) -->
+    <div id="treinoConcluidoOverlay">
+        
+        <!-- Fundo Cyber Grid Animado -->
+        <div class="cyber-grid"></div>
+
+        <div class="tc-content" id="tcContent">
+            
+            <div class="tc-header">
+                <h1 class="tc-title" id="tcTitle">Treino Concluído</h1>
+                <h3 class="tc-subtitle" id="tcSubtitle">BOM DESCANSO!</h3>
+            </div>
+            
+            <div class="tc-stats">
+                <div class="tc-stat-box" id="boxTempo">
+                    <span class="tc-stat-value c-time" id="tcValTempo">00:00</span>
+                    <span class="tc-stat-label">Duração</span>
+                </div>
+                <div class="tc-stat-box" id="boxSeries">
+                    <span class="tc-stat-value c-vol" id="tcValSeries">0</span>
+                    <span class="tc-stat-label">Volume</span>
+                </div>
+            </div>
+            
+            <div class="tc-stats" style="margin-bottom: 30px;">
+                <div class="tc-stat-box" id="boxXP" style="border-top: 2px solid var(--neon-lupus);">
+                    <span class="tc-stat-value c-xp" id="tcValXP">+0</span>
+                    <span class="tc-stat-label">XP Adquirido</span>
+                </div>
+                <div class="tc-stat-box" id="boxStreak" style="border-top: 2px solid var(--fire); display: none;">
+                    <span class="tc-stat-value c-streak">🔥 <span id="tcValStreak">0</span></span>
+                    <span class="tc-stat-label">Ofensiva (Dias)</span>
+                </div>
+            </div>
+
+            <button class="btn-primary btn-tc-close" onclick="fecharAnimacaoTreino()">Continuar a Jornada</button>
+        </div>
+    </div>
+
+    <!-- 2. NOVA TELA: EVOLUÇÃO DE PATENTE -->
+    <div id="levelUpOverlay">
+        <div class="lu-content" id="luContent">
+            <div class="lu-icon" id="luIcon">🥇</div>
+            <h2 class="lu-title">Nova Patente Alcançada</h2>
+            <h1 class="lu-patente" id="luPatenteNome">Ouro</h1>
+            <button class="btn-secondary" style="margin-top: 30px; font-size: 16px; border-color: var(--gold); color: var(--gold);" onclick="fecharLevelUp()">Incrível!</button>
+        </div>
+    </div>
+
+    <!-- MODAIS DE AVISO E CANCELAMENTO -->
+    <div id="modalConfirmacao" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="color: var(--danger); margin-bottom: 10px;">Atenção!</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Deseja encerrar o treino?</p>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-secondary" onclick="fecharModal('modalConfirmacao')">Não</button>
+                <button class="btn-end" style="display: block;" onclick="confirmarEncerramento()">Sim, encerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalMensagem" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="modalMsgTitulo" style="color: var(--timer-color); margin-bottom: 10px;">🏆 Excelente!</h2>
+            <p id="modalMsgTexto" style="color: var(--text-muted); margin-bottom: 20px;">Operação realizada com sucesso.</p>
+            <button class="btn-primary" onclick="fecharModal('modalMensagem')">Entendido</button>
+        </div>
+    </div>
+
+    <!-- CÓDIGO JS -->
+    <script>
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        let particles = [];
+        for(let i=0; i<60; i++) particles.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5});
+        function drawParticles() {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            ctx.fillStyle = 'rgba(139, 92, 246, 0.6)'; ctx.strokeStyle = 'rgba(139, 92, 246, 0.15)'; ctx.lineWidth = 1;
+            particles.forEach(p => {
+                p.x += p.vx; p.y += p.vy;
+                if(p.x < 0 || p.x > canvas.width) p.vx *= -1; if(p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI*2); ctx.fill();
+                particles.forEach(p2 => {
+                    let d = Math.hypot(p.x - p2.x, p.y - p2.y);
+                    if(d < 120) { ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y); ctx.stroke(); }
+                });
+            });
+            requestAnimationFrame(drawParticles);
+        }
+        drawParticles();
+        window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
+
+        let dbUsers = [];
+        let usuarioLogadoAtual = null;
+
+        const PATENTES_REGRAS = [
+            { nome: 'Bronze', xpReq: 0, icone: '🥉' }, { nome: 'Prata', xpReq: 100, icone: '🥈' }, { nome: 'Ouro', xpReq: 250, icone: '🥇' },
+            { nome: 'Platina', xpReq: 500, icone: '💠' }, { nome: 'Esmeralda', xpReq: 800, icone: '❇️' }, { nome: 'Titanium', xpReq: 1200, icone: '🛡️' },
+            { nome: 'Mestre', xpReq: 1800, icone: '🔱' }, { nome: 'Lenda', xpReq: 2500, icone: '👑' }, { nome: 'Alpha', xpReq: 4000, icone: '🩸' },
+            { nome: 'LUPUS', xpReq: 8000, icone: '🐺' }
+        ];
+
+        const CONQUISTAS_BD = [
+            { id: 'c1', titulo: 'Primeiro Sangue', desc: 'Registrou o primeiro treino.', dificuldade: 'facil', nomeDif: 'Fácil', xpBonus: 10, icone: '🩸', req: (u) => u.stats.treinos >= 1 },
+            { id: 'c2', titulo: 'Foco Inicial', desc: 'Anotou 3 refeições.', dificuldade: 'facil', nomeDif: 'Fácil', xpBonus: 10, icone: '🍎', req: (u) => u.stats.refeicoes >= 3 },
+            { id: 'c3', titulo: 'Lobo Solitário', desc: 'Fez o seu 1º Cardio.', dificuldade: 'facil', nomeDif: 'Fácil', xpBonus: 15, icone: '🏃', req: (u) => u.stats.cardios >= 1 },
+            { id: 'c4', titulo: 'Sem Dor, Sem Ganho', desc: 'Registrou 10 Exercícios.', dificuldade: 'media', nomeDif: 'Média', xpBonus: 30, icone: '🏋️', req: (u) => u.stats.exercicios >= 10 },
+            { id: 'c5', titulo: 'Consistência de Aço', desc: 'Fechou 10 treinos.', dificuldade: 'media', nomeDif: 'Média', xpBonus: 40, icone: '🔥', req: (u) => u.stats.treinos >= 10 },
+            { id: 'c6', titulo: 'Motor de 1000W', desc: 'Completou 10 cardios.', dificuldade: 'media', nomeDif: 'Média', xpBonus: 40, icone: '⚡', req: (u) => u.stats.cardios >= 10 },
+            { id: 'c7', titulo: 'Máquina Imparável', desc: 'Registrou 100 exercícios.', dificuldade: 'dificil', nomeDif: 'Difícil', xpBonus: 100, icone: '🤖', req: (u) => u.stats.exercicios >= 100 },
+            { id: 'c8', titulo: 'Mutante', desc: 'Completou 30 treinos.', dificuldade: 'dificil', nomeDif: 'Difícil', xpBonus: 150, icone: '🦍', req: (u) => u.stats.treinos >= 30 },
+            { id: 'c9', titulo: 'Chef 5 Estrelas', desc: 'Anotou 30 refeições.', dificuldade: 'dificil', nomeDif: 'Difícil', xpBonus: 150, icone: '👨‍🍳', req: (u) => u.stats.refeicoes >= 30 },
+            { id: 'c10', titulo: 'Lobo Alpha', desc: 'Atingiu 5.000 XP.', dificuldade: 'dificil', nomeDif: 'Lenda', xpBonus: 500, icone: '👑', req: (u) => u.xp >= 5000 },
+            { id: 'c11', titulo: 'Olimpo', desc: 'Atingiu 10.000 XP.', dificuldade: 'dificil', nomeDif: 'Mítico', xpBonus: 1000, icone: '⚡', req: (u) => u.xp >= 10000 }
+        ];
+
+        function initDB() {
+            let salvos = localStorage.getItem('lupus_users');
+            if(salvos) {
+                dbUsers = JSON.parse(salvos).map(u => {
+                    if(!u.stats) u.stats = { treinos: 0, exercicios: 0, falhas: 0, cardios: 0, refeicoes: 0, ultimoTreino: null, streak: 0 };
+                    if(!u.perfil) u.perfil = { bio: 'Hipertrofia Muscular', nomeC: '', nasc: '', peso: '', altura: '', ocultaNome: false, ocultaNasc: false };
+                    if(!u.conquistas) u.conquistas = [];
+                    return { ...u, status: u.status || 'ativo', xp: parseInt(u.xp) || 0, apelido: u.apelido || u.nome, isOnline: false, isTreinando: false };
+                });
+            } else {
+                dbUsers = [{ nome: 'Alpha Admin', apelido: 'Alpha Admin', user: 'admin375610', pass: 'admin020822', role: 'admin', status: 'ativo', xp: 0, isOnline: false, isTreinando: false, stats: { treinos: 0, exercicios: 0, falhas: 0, cardios: 0, refeicoes: 0, ultimoTreino: null, streak: 0 }, conquistas: [], perfil: { bio: 'Hipertrofia Muscular', nomeC: 'Rickysond Alves', nasc: '', peso: '78', altura: '1.75', ocultaNome: false, ocultaNasc: false } }];
+            }
+            salvarDB();
+        } initDB();
+
+        function salvarDB() { localStorage.setItem('lupus_users', JSON.stringify(dbUsers)); }
+
+        function mostrarAlerta(msg) { let toast = document.getElementById('toastAlerta'); document.getElementById('toastAlertaTexto').innerText = msg; toast.classList.add('mostrar'); setTimeout(() => { toast.classList.remove('mostrar'); }, 3500); }
+        function animarPulaXP() { let badge = document.getElementById('badgeXpHeader'); if(badge) { badge.classList.remove('pulsar-xp'); void badge.offsetWidth; badge.classList.add('pulsar-xp'); } }
+        function mostrarToastConquista(icone, titulo, xpBonus) { let toast = document.getElementById('toastContainer'); document.getElementById('toastIcon').innerText = icone; document.getElementById('toastTitulo').innerText = titulo; document.getElementById('toastXp').innerText = `+${xpBonus} XP Adicionado`; toast.classList.add('mostrar'); setTimeout(() => { toast.classList.remove('mostrar'); }, 4500); }
+        function atualizarMeuStatusVisual(tipo) { let box = document.getElementById('meuStatusGlobal'); let dot = document.getElementById('meuStatusDot'); let texto = document.getElementById('meuStatusTexto'); box.className = 'user-status-global'; dot.className = 'dot'; if(tipo === 'treinando') { box.classList.add('treinando'); dot.classList.add('dot-treinando'); texto.innerText = 'Treinando...'; } else { box.classList.add('online'); dot.classList.add('dot-online'); texto.innerText = 'Online'; } }
+        function dispararConfete() { try { if (typeof confetti !== 'function') return; var duration = 4*1000; var animationEnd = Date.now()+duration; var defaults = {startVelocity:30, spread:360, ticks:60, zIndex:1000000}; function randomInRange(min,max) { return Math.random()*(max-min)+min; } var interval = setInterval(function() { var timeLeft = animationEnd - Date.now(); if(timeLeft<=0) {return clearInterval(interval);} var particleCount = 50*(timeLeft/duration); confetti(Object.assign({}, defaults, {particleCount, origin:{x:randomInRange(0.1,0.3),y:Math.random()-0.2},colors:['#8b5cf6','#fbbf24']})); confetti(Object.assign({}, defaults, {particleCount, origin:{x:randomInRange(0.7,0.9),y:Math.random()-0.2},colors:['#8b5cf6','#fbbf24']})); }, 250); } catch(e) {} }
+
+        function entrar() {
+            let inputUser = document.getElementById('loginUser').value.trim(); let inputPass = document.getElementById('loginPass').value.trim();
+            let user = dbUsers.find(u => u.user === inputUser && u.pass === inputPass);
+            if(!user) { document.getElementById('msgErroLogin').innerText = "Usuário ou senha incorretos."; document.getElementById('msgErroLogin').style.display = 'block'; return; }
+            if(user.status === 'inativo') { document.getElementById('msgErroLogin').innerText = "Conta desativada pelo administrador."; document.getElementById('msgErroLogin').style.display = 'block'; return; }
+
+            document.getElementById('msgErroLogin').style.display = 'none';
+            user.isOnline = true; user.isTreinando = false; salvarDB(); usuarioLogadoAtual = user;
+            
+            document.body.classList.add('logged-in');
+            document.getElementById('loginScreen').style.display = 'none';
+            
+            if(user.role === 'admin') {
+                document.getElementById('adminPanel').style.display = 'block'; renderizarMembrosAdm();
+            } else {
+                let overlay = document.getElementById('transitionOverlay'); overlay.style.display = 'flex';
+                setTimeout(() => {
+                    overlay.style.opacity = '0';
+                    setTimeout(() => {
+                        overlay.style.display = 'none'; overlay.style.opacity = '1';
+                        
+                        document.getElementById('ambientBg').style.display = 'block';
+                        document.getElementById('appContainer').style.display = 'block';
+                        document.getElementById('displayApelidoNome').innerText = user.apelido || user.nome;
+                        
+                        atualizarMeuStatusVisual('online'); 
+                        carregarPerfilInputs(); 
+                        atualizarDisplayXPePatente(); 
+                        renderizarConquistasUI(); 
+                        renderizarPatentesUI();
+                        
+                        processarStreakVisuais();
+                        if(meuGrafico && typeof meuGrafico.update === 'function') meuGrafico.update();
+                        
+                        let activeTab = document.querySelector('.nav-links a.active');
+                        if(activeTab) { moverPilula(activeTab); }
+                    }, 400);
+                }, 1500);
+            }
+        }
+
+        function sairParaLogin() { 
+            if(usuarioLogadoAtual) { let u = dbUsers.find(x => x.user === usuarioLogadoAtual.user); if(u) { u.isOnline = false; u.isTreinando = false; salvarDB(); } } 
+            usuarioLogadoAtual = null; 
+            document.body.classList.remove('logged-in');
+            document.getElementById('ambientBg').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'none'; document.getElementById('adminPanel').style.display = 'none'; document.getElementById('loginScreen').style.display = 'flex'; document.getElementById('loginUser').value = ''; document.getElementById('loginPass').value = ''; 
+        }
+
+        function processarStreakVisuais() {
+            if(!usuarioLogadoAtual || !usuarioLogadoAtual.stats) return;
+            let userDB = dbUsers.find(u => u.user === usuarioLogadoAtual.user);
+            
+            if (userDB.stats.ultimoTreino) {
+                let diffHoras = (Date.now() - userDB.stats.ultimoTreino) / (1000 * 60 * 60);
+                if (diffHoras > 48) {
+                    userDB.stats.streak = 0;
+                    salvarDB();
+                }
+            }
+
+            let badge = document.getElementById('meuStreakGlobal');
+            if (userDB.stats.streak > 0) {
+                document.getElementById('meuStreakTexto').innerText = userDB.stats.streak;
+                badge.style.display = 'inline-flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function adicionarXP(pontos) { 
+            try { 
+                if(usuarioLogadoAtual && usuarioLogadoAtual.role !== 'admin') { 
+                    let userDB = dbUsers.find(u => u.user === usuarioLogadoAtual.user); 
+                    if(!userDB) return; 
+                    
+                    let xpAntigo = parseInt(userDB.xp) || 0; 
+                    let indexAntigo = 0; 
+                    for(let i=0; i<PATENTES_REGRAS.length; i++) { if(xpAntigo >= PATENTES_REGRAS[i].xpReq) indexAntigo = i; }
+                    
+                    userDB.xp = xpAntigo + pontos; 
+                    usuarioLogadoAtual.xp = userDB.xp; 
+                    salvarDB(); 
+                    
+                    atualizarDisplayXPePatente(); 
+                    animarPulaXP(); 
+                    verificarConquistas(); 
+
+                    let indexNovo = 0; 
+                    for(let i=0; i<PATENTES_REGRAS.length; i++) { if(userDB.xp >= PATENTES_REGRAS[i].xpReq) indexNovo = i; }
+
+                    if (indexNovo > indexAntigo) {
+                        dispararAnimacaoLevelUp(PATENTES_REGRAS[indexNovo]);
+                    }
+                } 
+            } catch (e) {} 
+        }
+        
+        function atualizarDisplayXPePatente() {
+            if(usuarioLogadoAtual) {
+                let xpAtual = parseInt(usuarioLogadoAtual.xp) || 0; let indexAtual = 0; for(let i=0; i<PATENTES_REGRAS.length; i++) { if(xpAtual >= PATENTES_REGRAS[i].xpReq) indexAtual = i; } let patente = PATENTES_REGRAS[indexAtual];
+                document.getElementById('displayXP').innerText = xpAtual; document.getElementById('displayPatenteTop').innerText = patente.nome; document.getElementById('inputPatentePerfil').value = patente.nome;
+                let bar = document.getElementById('xpProgressBar'); if(bar) { if(indexAtual < PATENTES_REGRAS.length - 1) { let nextPatente = PATENTES_REGRAS[indexAtual + 1]; let range = nextPatente.xpReq - patente.xpReq; let gained = xpAtual - patente.xpReq; let pct = Math.max(0, (gained / range) * 100); bar.style.width = pct + '%'; } else { bar.style.width = '100%'; } }
+                renderizarPatentesUI();
+            }
+        }
+        function verificarConquistas() {
+            if(!usuarioLogadoAtual || usuarioLogadoAtual.role === 'admin') return; let filaConquistas = [];
+            CONQUISTAS_BD.forEach(c => { let concluidas = usuarioLogadoAtual.conquistas || []; if(!concluidas.includes(c.id)) { if(c.req(usuarioLogadoAtual)) { concluidas.push(c.id); usuarioLogadoAtual.conquistas = concluidas; usuarioLogadoAtual.xp += c.xpBonus; filaConquistas.push(c); } } });
+            if(filaConquistas.length > 0) { let userDB = dbUsers.find(u => u.user === usuarioLogadoAtual.user); userDB.conquistas = usuarioLogadoAtual.conquistas; userDB.xp = usuarioLogadoAtual.xp; salvarDB(); renderizarConquistasUI(); atualizarDisplayXPePatente(); filaConquistas.forEach((c, index) => { setTimeout(() => { mostrarToastConquista(c.icone, c.titulo, c.xpBonus); }, index * 5000); }); }
+        }
+
+        function renderizarPatentesUI() {
+            if(!usuarioLogadoAtual) return; let html = ''; let xp = parseInt(usuarioLogadoAtual.xp) || 0; let indexAtual = 0; for(let i=0; i<PATENTES_REGRAS.length; i++) { if(xp >= PATENTES_REGRAS[i].xpReq) { indexAtual = i; } }
+            PATENTES_REGRAS.forEach((p, index) => {
+                if(index === indexAtual) { html += `<div class="patente-card ativa" style="border-color: var(--gold); box-shadow: 0 0 15px rgba(251, 191, 36, 0.2); transform: scale(1.05);"><span style="font-size: 35px;">${p.icone}</span><h4 style="color: var(--gold); margin-top: 5px;">${p.nome}</h4><small style="color: var(--text-main); font-weight:bold;">${xp} XP <span style="color: var(--gold); font-size:9px; border: 1px solid var(--gold); padding: 2px 4px; border-radius:4px; margin-left: 4px;">ATUAL</span></small></div>`; } else if(xp >= p.xpReq) { html += `<div class="patente-card ativa" style="opacity: 0.8;"><span style="font-size: 35px;">${p.icone}</span><h4 style="color: var(--bronze); margin-top: 5px;">${p.nome}</h4><small style="color: var(--text-muted);">${p.xpReq} XP</small></div>`; } else { html += `<div class="patente-card bloqueada"><span style="font-size: 35px; filter: grayscale(100%); opacity: 0.5;">${p.icone}</span><h4 style="margin-top: 5px; color: var(--text-muted);">${p.nome} 🔒</h4><small style="color: var(--text-muted);">${p.xpReq} XP</small></div>`; }
+            }); let grid = document.getElementById('gridPatentes'); if(grid) grid.innerHTML = html;
+        }
+        function renderizarConquistasUI() {
+            if(!usuarioLogadoAtual) return; let html = ''; let concluidas = usuarioLogadoAtual.conquistas || [];
+            CONQUISTAS_BD.forEach(c => { let d = concluidas.includes(c.id); let cor = c.dificuldade === 'facil' ? 'badge-facil' : (c.dificuldade === 'media' ? 'badge-media' : 'badge-dificil'); html += `<div class="conquista-card ${d ? 'ativa' : 'bloqueada'}"><div class="conquista-icon">${c.icone}</div><div class="conquista-info"><h4>${c.titulo}</h4><p>${c.desc}</p><span class="badge-dificuldade ${cor}">${c.nomeDif}</span></div></div>`; });
+            let grid = document.getElementById('gridConquistas'); if(grid) grid.innerHTML = html;
+        }
+
+        function gerarHTMLStatus(u) { let statusClass = u.isTreinando ? 'status-treinando' : (u.isOnline ? 'status-online' : 'status-offline'); let statusDot = u.isTreinando ? 'dot-treinando' : (u.isOnline ? 'dot-online' : 'dot-offline'); let statusText = u.isTreinando ? 'Treinando...' : (u.isOnline ? 'Online' : 'Offline'); return `<div class="status-badge ${statusClass}"><span class="dot ${statusDot}"></span> ${statusText}</div>`; }
+        function renderizarMatilha() {
+            let html = ''; let membros = dbUsers.filter(u => u.role !== 'admin'); if(membros.length === 0) { document.getElementById('gridMatilha').innerHTML = '<p style="color:var(--text-muted); font-size:13px;">Você é o único lobo na matilha por enquanto.</p>'; return; }
+            membros.forEach(u => { 
+                let indexAtual = 0; for(let i=0; i<PATENTES_REGRAS.length; i++) { if(u.xp >= PATENTES_REGRAS[i].xpReq) indexAtual = i; } let p = PATENTES_REGRAS[indexAtual].nome; let htmlStatus = gerarHTMLStatus(u); 
+                html += `
+                <div class="membro-card" onclick="abrirPerfilJogador('${u.user}')">
+                    <div class="avatar-mini">
+                        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <polygon points="15,40 30,5 45,25" fill="#a1a1aa" />
+                            <polygon points="22,25 30,5 38,22" fill="#09090b" />
+                            <polygon points="15,40 45,25 60,45" fill="#52525b" />
+                            <polygon points="45,25 75,35 95,50 70,55 60,45" fill="#a1a1aa" />
+                            <polygon points="15,40 60,45 70,55 50,80 20,90" fill="#121215" />
+                            <polygon points="70,55 95,50 85,65 65,65 50,80" fill="#52525b" />
+                            <polygon points="95,50 88,48 88,55" fill="#000000" />
+                            <polygon points="55,38 68,40 60,44" fill="var(--gold)" />
+                            <polygon points="85,65 82,72 78,65" fill="#f4f4f5" />
+                        </svg>
+                    </div>
+                    <h4>${u.apelido || u.nome}</h4><p style="font-size:11px; color:var(--gold); font-weight:bold;">${p}</p>${htmlStatus}
+                </div>`; 
+            });
+            let grid = document.getElementById('gridMatilha'); if(grid) grid.innerHTML = html;
+        }
+        function abrirPerfilJogador(username) {
+            let u = dbUsers.find(x => x.user === username); if(!u) return; let indexAtual = 0; for(let i=0; i<PATENTES_REGRAS.length; i++) { if(u.xp >= PATENTES_REGRAS[i].xpReq) indexAtual = i; } let p = PATENTES_REGRAS[indexAtual].nome; let perfil = u.perfil || {}; let stats = u.stats || {};
+            let modalStatus = document.getElementById('modalJogadorStatus'); modalStatus.outerHTML = gerarHTMLStatus(u).replace('class="status-badge', 'id="modalJogadorStatus" class="status-badge').replace('margin-top: 10px;', 'margin: -5px auto 10px;');
+            document.getElementById('modalJogadorApelido').innerText = u.apelido || u.nome; document.getElementById('modalJogadorPatente').innerText = p; document.getElementById('modalJogadorBio').innerText = perfil.bio || 'Hipertrofia Muscular'; document.getElementById('modalStatsTreinos').innerText = stats.treinos || 0; document.getElementById('modalStatsEx').innerText = stats.exercicios || 0; document.getElementById('modalInfoNome').innerText = perfil.ocultaNome ? 'Oculto' : (perfil.nomeC || '--'); document.getElementById('modalInfoNasc').innerText = perfil.ocultaNasc ? 'Oculto' : (perfil.nasc ? perfil.nasc.split('-').reverse().join('/') : '--'); document.getElementById('modalInfoCorpo').innerText = `${perfil.peso || '--'} kg / ${perfil.altura || '--'} m`; document.getElementById('modalPerfilJogador').style.display = 'flex';
+        }
+
+        function carregarPerfilInputs() { if(!usuarioLogadoAtual) return; let p = usuarioLogadoAtual.perfil || {}; document.getElementById('inputApelidoPerfil').value = usuarioLogadoAtual.apelido || ''; let objSelect = document.getElementById('inputBio'); let encontrouOpcao = Array.from(objSelect.options).some(opt => opt.value === p.bio); if(encontrouOpcao) { objSelect.value = p.bio; } else { objSelect.value = "Hipertrofia Muscular"; } document.getElementById('inputNomeCompleto').value = p.nomeC || ''; document.getElementById('inputNasc').value = p.nasc || ''; document.getElementById('inputPeso').value = p.peso || ''; document.getElementById('inputAltura').value = p.altura || ''; document.getElementById('ocultarNome').checked = p.ocultaNome || false; document.getElementById('ocultarNasc').checked = p.ocultaNasc || false; }
+        function salvarPerfil() { let uDB = dbUsers.find(u => u.user === usuarioLogadoAtual.user); let apelidoDigitado = document.getElementById('inputApelidoPerfil').value.trim(); uDB.apelido = apelidoDigitado !== '' ? apelidoDigitado : uDB.nome; uDB.perfil = { bio: document.getElementById('inputBio').value, nomeC: document.getElementById('inputNomeCompleto').value, nasc: document.getElementById('inputNasc').value, peso: document.getElementById('inputPeso').value, altura: document.getElementById('inputAltura').value, ocultaNome: document.getElementById('ocultarNome').checked, ocultaNasc: document.getElementById('ocultarNasc').checked }; usuarioLogadoAtual = uDB; salvarDB(); document.getElementById('displayApelidoNome').innerText = uDB.apelido; document.getElementById('modalMsgTitulo').innerText = "⚙️ Sucesso!"; document.getElementById('modalMsgTitulo').style.color = "var(--timer-color)"; document.getElementById('modalMsgTexto').innerText = "Seu perfil foi atualizado na rede da Matilha."; document.getElementById('modalMensagem').style.display = 'flex'; }
+        function salvarRefeicaoDia() { let textoElem = document.getElementById('textoRefeicoes'); let texto = textoElem.value; if(texto.trim() === '') { mostrarAlerta("Escreva a dieta antes de salvar!"); return; } let msgVazia = document.getElementById('msgDietaVazia'); if(msgVazia) msgVazia.style.display = 'none'; let dataAtual = new Date(); let dataF = dataAtual.toLocaleDateString('pt-BR'); let hora = dataAtual.getHours().toString().padStart(2, '0') + ':' + dataAtual.getMinutes().toString().padStart(2, '0'); let idGrupoDieta = 'dieta-grupo-' + dataF.replace(/\//g, '-'); let grupoExistente = document.getElementById(idGrupoDieta); let refeicaoHTML = `<div class="hist-item hist-item-dieta" style="margin-bottom: 5px;"><small style="color: var(--text-muted); font-size: 11px;">⏰ Inserido às ${hora}</small><br><span>${texto}</span></div>`; if (grupoExistente) { let corpoGrupo = grupoExistente.querySelector('.hist-group-body'); corpoGrupo.innerHTML = refeicaoHTML + corpoGrupo.innerHTML; } else { let elemsData = document.querySelectorAll('.relogio-data'); let dataTexto = elemsData.length > 0 ? elemsData[0].innerText : dataF; let novoPacote = `<div class="hist-group"><div class="hist-group-header" onclick="toggleGrupo(this)" style="border-left: 3px solid var(--bronze);"><span>🍽️ Alimentação - ${dataTexto}</span><span style="color: var(--text-muted); font-size: 12px;">Expandir ▼</span></div><div class="hist-group-body" style="display: flex; flex-direction: column; gap: 10px;">${refeicaoHTML}</div></div>`; document.getElementById('listaHistoricoDieta').innerHTML = novoPacote + document.getElementById('listaHistoricoDieta').innerHTML; } if(usuarioLogadoAtual && usuarioLogadoAtual.stats) { usuarioLogadoAtual.stats.refeicoes = (parseInt(usuarioLogadoAtual.stats.refeicoes) || 0) + 1; } adicionarXP(1); textoElem.value = ''; document.getElementById('modalMsgTitulo').innerText = "🍎 Salvo!"; document.getElementById('modalMsgTitulo').style.color = "var(--timer-color)"; document.getElementById('modalMsgTexto').innerText = "Refeição contabilizada no diário."; document.getElementById('modalMensagem').style.display = 'flex'; }
+
+        // ==========================================
+        // TREINO E ANIMAÇÕES EM CASCATA
+        // ==========================================
+        let tempo = 0; let intervalo; let exerciciosDaSessaoAtual = []; 
+
+        function iniciarTreino() {
+            document.getElementById('btnIniciarTreino').style.display = 'none'; document.getElementById('btnEncerrarTreino').style.display = 'block'; 
+            let container = document.getElementById('containerRegistros'); container.style.opacity = '1'; container.style.pointerEvents = 'auto';
+            document.getElementById('displayCronometro').classList.add('rodando');
+            
+            document.body.classList.add('foco-absoluto');
+            if(usuarioLogadoAtual) { let userDB = dbUsers.find(u => u.user === usuarioLogadoAtual.user); if(userDB) { userDB.isTreinando = true; salvarDB(); atualizarMeuStatusVisual('treinando'); } }
+
+            atualizarFeedbackSessao();
+            intervalo = setInterval(() => { tempo++; let h = Math.floor(tempo / 3600).toString().padStart(2, '0'); let m = Math.floor((tempo % 3600) / 60).toString().padStart(2, '0'); let s = (tempo % 60).toString().padStart(2, '0'); document.getElementById('displayCronometro').innerText = `${h}:${m}:${s}`; }, 1000);
+        }
+
+        function atualizarFeedbackSessao() { let feed = document.getElementById('feedbackSessaoAtual'); if(exerciciosDaSessaoAtual.length > 0) { feed.innerHTML = `<p style="font-size:12px; color:var(--text-muted); margin-bottom:5px;">Na Sessão Atual:</p>` + exerciciosDaSessaoAtual.join(''); feed.style.display = 'flex'; } else { feed.style.display = 'none'; } }
+        function toggleFalha() { let chk = document.getElementById('regMuscFalha'); let box = document.getElementById('boxFalha'); chk.checked = !chk.checked; if(chk.checked) { box.classList.add('falha-ativa'); } else { box.classList.remove('falha-ativa'); } }
+
+        function registrarMusculacao() {
+            let exe = document.getElementById('regMuscNome').value.trim(); let carga = document.getElementById('regMuscCarga').value.trim(); let reps = document.getElementById('regMuscReps').value.trim(); let falha = document.getElementById('regMuscFalha').checked;
+            if(!exe) { mostrarAlerta("Faltou o nome da Máquina/Exercício."); return; } if(!carga) { mostrarAlerta("Faltou a Carga."); return; } if(!reps && !falha) { mostrarAlerta("Preencha as Repetições ou marque Falha."); return; } if(reps && falha) { mostrarAlerta("Escolha Reps OU Falha, apenas um."); return; }
+            let exibicaoReps = falha ? '<span style="color: var(--danger);">Até a Falha 🔥</span>' : `<span>${reps}</span>`; let itemHTML = `<div class="hist-item" style="margin-bottom: 5px;">🏋️ <span class="destaque">${exe}</span> | Carga: <span>${carga}kg</span> | Reps: ${exibicaoReps}</div>`; 
+            if(usuarioLogadoAtual && usuarioLogadoAtual.stats) { usuarioLogadoAtual.stats.exercicios = (parseInt(usuarioLogadoAtual.stats.exercicios) || 0) + 1; }
+            exerciciosDaSessaoAtual.push(itemHTML); adicionarXP(1); atualizarFeedbackSessao();
+            document.getElementById('regMuscCarga').value = ''; document.getElementById('regMuscReps').value = ''; document.getElementById('regMuscFalha').checked = false; document.getElementById('boxFalha').classList.remove('falha-ativa');
+        }
+
+        function registrarCardio() {
+            let cardio = document.getElementById('regCardioNome').value.trim(); 
+            let tempoCardio = document.getElementById('regCardioTempo').value.trim();
+            
+            if(!cardio) { mostrarAlerta("Faltou o nome do cardio."); return; } 
+            if(!tempoCardio) { mostrarAlerta("Faltou o tempo/km."); return; }
+            
+            // Validação rigorosa: Garante que exista pelo menos uma LETRA junto com os números
+            let contemLetra = /[kKmMhH]/.test(tempoCardio);
+            if(!contemLetra) {
+                mostrarAlerta("Adicione a unidade! (Ex: 30m, 5km, 1h)");
+                return;
+            }
+
+            let itemHTML = `<div class="hist-item" style="margin-bottom: 5px;">🏃 <span class="destaque">${cardio}</span> | Duração/Distância: <span>${tempoCardio}</span></div>`; 
+            exerciciosDaSessaoAtual.push(itemHTML); adicionarXP(1); atualizarFeedbackSessao(); document.getElementById('regCardioTempo').value = '';
+        }
+
+        function registrarLivre() {
+            let livre = document.getElementById('regLivreNome').value.trim(); let repsLivre = document.getElementById('regLivreQtd').value.trim();
+            if(!livre) { mostrarAlerta("Faltou o nome do exercício livre."); return; } if(!repsLivre) { mostrarAlerta("Faltou a quantidade."); return; }
+            let itemHTML = `<div class="hist-item" style="margin-bottom: 5px;">🤸 <span class="destaque">${livre}</span> | Qtd: <span>${repsLivre}</span></div>`; 
+            if(usuarioLogadoAtual && usuarioLogadoAtual.stats) { usuarioLogadoAtual.stats.exercicios = (parseInt(usuarioLogadoAtual.stats.exercicios) || 0) + 1; }
+            exerciciosDaSessaoAtual.push(itemHTML); adicionarXP(1); atualizarFeedbackSessao(); document.getElementById('regLivreQtd').value = '';
+        }
+
+        function tentarEncerrar() { document.getElementById('modalConfirmacao').style.display = 'flex'; }
+
+        // ==========================================
+        // LÓGICA DE CONTADOR ANIMADO E NOME DINÂMICO
+        // ==========================================
+        function animarNumero(id, endValue, isTime = false) {
+            let el = document.getElementById(id);
+            if (isTime) { el.innerText = endValue; return; }
+            let startTimestamp = null;
+            const duration = 1200; // 1.2 segundos rodando os números
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                let currentVal = Math.floor(progress * endValue);
+                el.innerText = (id === 'tcValXP' ? '+' : '') + currentVal;
+                if (progress < 1) { 
+                    window.requestAnimationFrame(step); 
+                } else {
+                    // Adiciona a classe flash quando o contador terminar
+                    el.classList.add('flash');
+                    setTimeout(() => el.classList.remove('flash'), 500);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        function dispararAnimacaoFimTreino(duracaoTotal, volume, streak, xpGanho) {
+            let overlay = document.getElementById('treinoConcluidoOverlay');
+            
+            // Aplica o nome do usuário de forma dinâmica
+            let nomeAtleta = usuarioLogadoAtual.apelido || usuarioLogadoAtual.nome;
+            document.getElementById('tcSubtitle').innerText = `BOM DESCANSO, ${nomeAtleta.toUpperCase()}!`;
+            
+            // Remove as classes de animação antes de aparecer
+            document.getElementById('tcTitle').classList.remove('show-title');
+            document.getElementById('tcValTempo').innerText = "00:00:00";
+            document.getElementById('tcValSeries').innerText = "0";
+            document.getElementById('tcValXP').innerText = "+0";
+            document.querySelectorAll('.tc-stat-box').forEach(box => box.classList.remove('show-box'));
+            
+            let streakBox = document.getElementById('boxStreak');
+            if(streak > 0) {
+                streakBox.style.display = 'block';
+                document.getElementById('tcValStreak').innerText = "0";
+            } else {
+                streakBox.style.display = 'none';
+            }
+
+            overlay.style.display = 'flex';
+            
+            setTimeout(() => {
+                overlay.style.opacity = '1';
+                
+                // Dispara o título com o efeito PANCADA (Stamp)
+                document.getElementById('tcTitle').classList.add('show-title');
+                
+                dispararConfete();
+
+                // Define a ordem em que as caixas vão cair na tela (Efeito Cascata)
+                let caixas = [
+                    { el: document.getElementById('boxTempo'), delay: 400, action: () => animarNumero('tcValTempo', duracaoTotal, true) },
+                    { el: document.getElementById('boxSeries'), delay: 600, action: () => animarNumero('tcValSeries', volume) },
+                    { el: document.getElementById('boxXP'), delay: 800, action: () => animarNumero('tcValXP', xpGanho) }
+                ];
+                
+                if(streak > 0) {
+                    caixas.push({ el: streakBox, delay: 1000, action: () => animarNumero('tcValStreak', streak) });
+                }
+
+                // Dispara cada caixa com o seu atraso
+                caixas.forEach(item => {
+                    setTimeout(() => {
+                        item.el.classList.add('show-box');
+                        // Os números começam a girar instantes depois da caixa aparecer
+                        setTimeout(item.action, 150); 
+                    }, item.delay);
+                });
+
+            }, 50);
+        }
+
+        function fecharAnimacaoTreino() {
+            let overlay = document.getElementById('treinoConcluidoOverlay');
+            overlay.style.opacity = '0';
+            setTimeout(() => { overlay.style.display = 'none'; }, 600);
+        }
+
+        function dispararAnimacaoLevelUp(patente) {
+            let overlay = document.getElementById('levelUpOverlay');
+            let content = document.getElementById('luContent');
+            
+            document.getElementById('luIcon').innerText = patente.icone;
+            document.getElementById('luPatenteNome').innerText = patente.nome;
+
+            overlay.style.display = 'flex';
+            setTimeout(() => {
+                overlay.style.opacity = '1';
+                content.classList.add('show');
+                dispararConfete(); 
+                dispararConfete(); 
+            }, 100);
+        }
+
+        function fecharLevelUp() {
+            let overlay = document.getElementById('levelUpOverlay');
+            let content = document.getElementById('luContent');
+            content.classList.remove('show');
+            overlay.style.opacity = '0';
+            setTimeout(() => { overlay.style.display = 'none'; }, 500);
+        }
+
+        function confirmarEncerramento() {
+            clearInterval(intervalo); fecharModal('modalConfirmacao');
+            document.body.classList.remove('foco-absoluto'); 
+            
+            if(!usuarioLogadoAtual) return; let userDB = dbUsers.find(u => u.user === usuarioLogadoAtual.user); if(!userDB) return;
+            userDB.isTreinando = false; atualizarMeuStatusVisual('online');
+
+            let indexAtual = 0; for(let i=0; i<PATENTES_REGRAS.length; i++) { if(userDB.xp >= PATENTES_REGRAS[i].xpReq) indexAtual = i; }
+            let xpGanhoBase = 5; if(indexAtual === 1) xpGanhoBase = 8; else if(indexAtual === 2) xpGanhoBase = 12; else if(indexAtual === 3) xpGanhoBase = 15; else if(indexAtual >= 4) xpGanhoBase = 15 + (indexAtual - 3) * 5;
+
+            // SISTEMA DE OFENSIVA (STREAK)
+            let agora = Date.now();
+            if (!userDB.stats.ultimoTreino) {
+                userDB.stats.streak = 1;
+            } else {
+                let diffH = (agora - userDB.stats.ultimoTreino) / 3600000;
+                if (diffH > 48) {
+                    userDB.stats.streak = 1; 
+                } else if (diffH > 12) {
+                    userDB.stats.streak = (parseInt(userDB.stats.streak) || 0) + 1;
+                }
+            }
+            userDB.stats.ultimoTreino = agora;
+
+            if(exerciciosDaSessaoAtual.length > 0) {
+                let msgVazia = document.getElementById('msgHistoricoVazio'); if(msgVazia) msgVazia.style.display = 'none';
+                let elemsData = document.querySelectorAll('.relogio-data'); let dataFormatada = elemsData.length > 0 ? elemsData[0].innerText : new Date().toLocaleDateString('pt-BR'); let duracaoTotal = document.getElementById('displayCronometro').innerText;
+                let pacoteHTML = `<div class="hist-group"><div class="hist-group-header" onclick="toggleGrupo(this)"><span>📅 ${dataFormatada}</span><span style="color: var(--text-muted); font-size: 12px;">Tempo: ${duracaoTotal} ▼</span></div><div class="hist-group-body" style="display: flex; flex-direction: column; gap: 10px;">${exerciciosDaSessaoAtual.join('')}</div></div>`;
+                let listaOficial = document.getElementById('listaHistoricoAgrupado'); listaOficial.innerHTML = pacoteHTML + listaOficial.innerHTML;
+
+                userDB.stats.treinos = (parseInt(userDB.stats.treinos) || 0) + 1; usuarioLogadoAtual = userDB; salvarDB(); 
+                
+                // DISPARA A NOVA ANIMAÇÃO CASCATA / DARK COM NOME DINÂMICO E GRID
+                dispararAnimacaoFimTreino(duracaoTotal, exerciciosDaSessaoAtual.length, userDB.stats.streak, xpGanhoBase);
+
+                adicionarXP(xpGanhoBase); 
+                verificarConquistas();
+                
+            } else {
+                salvarDB(); 
+                document.getElementById('modalMsgTitulo').innerText = "Treino Cancelado"; document.getElementById('modalMsgTitulo').style.color = "var(--text-muted)";
+                document.getElementById('modalMsgTexto').innerHTML = "Nenhum exercício foi registrado nesta sessão. O cronômetro foi zerado sem ganhos de XP."; 
+                document.getElementById('modalMensagem').style.display = 'flex';
+            }
+            
+            processarStreakVisuais();
+
+            exerciciosDaSessaoAtual = []; atualizarFeedbackSessao();
+            document.getElementById('btnIniciarTreino').style.display = 'block'; document.getElementById('btnEncerrarTreino').style.display = 'none'; 
+            let container = document.getElementById('containerRegistros'); container.style.opacity = '0.4'; container.style.pointerEvents = 'none';
+            document.getElementById('displayCronometro').classList.remove('rodando'); document.getElementById('displayCronometro').innerText = '00:00:00'; tempo = 0;
+        }
+
+        // ==========================================
+        // PAINEL ADMINISTRADOR
+        // ==========================================
+        function criarMembro() {
+            let n = document.getElementById('novoNome').value.trim(); let u = document.getElementById('novoUser').value.trim(); let p = document.getElementById('novaSenha').value.trim();
+            if(!n || !u || !p) { mostrarAlerta("Preencha todos os campos para criar a conta!"); return; }
+            if(dbUsers.find(x => x.user === u)) { mostrarAlerta("Este usuário já existe."); return; }
+            dbUsers.push({ nome: n, apelido: n, user: u, pass: p, role: 'membro', status: 'ativo', xp: 0, isOnline: false, isTreinando: false, stats: { treinos: 0, exercicios: 0, falhas: 0, cardios: 0, refeicoes: 0, ultimoTreino: null, streak: 0 }, conquistas: [], perfil: { bio: 'Hipertrofia Muscular', nomeC: '', nasc: '', peso: '', altura: '', ocultaNome: false, ocultaNasc: false } });
+            salvarDB(); document.getElementById('modalMsgTitulo').innerText = "✅ Sucesso!"; document.getElementById('modalMsgTitulo').style.color = "var(--timer-color)"; document.getElementById('modalMsgTexto').innerText = "Membro criado com sucesso!"; document.getElementById('modalMensagem').style.display = 'flex';
+            document.getElementById('novoNome').value = ''; document.getElementById('novoUser').value = ''; document.getElementById('novaSenha').value = ''; renderizarMembrosAdm();
+        }
+
+        function renderizarMembrosAdm() {
+            let lista = document.getElementById('listaMembrosAdm'); lista.innerHTML = ''; let membros = dbUsers.filter(u => u.role !== 'admin');
+            if(membros.length === 0) { lista.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">Nenhum membro cadastrado.</p>'; return; }
+            membros.forEach(m => {
+                let pAtual = obterPatente(m.xp); let btnAcaoStatus = m.status === 'ativo' ? `<button class="btn-adm btn-block" onclick="alternarStatusMembro('${m.user}')">Desativar</button>` : `<button class="btn-adm" style="border: 1px solid var(--timer-color); color: var(--timer-color); background: transparent;" onclick="alternarStatusMembro('${m.user}')">Ativar</button>`;
+                let div = document.createElement('div'); div.className = 'member-card';
+                div.innerHTML = `<div class="member-info"><h4>${m.nome} <span class="badge-xp">${m.xp} XP</span> <span style="font-size:11px; color:var(--gold); margin-left:5px;">(${pAtual})</span></h4><p style="margin-top: 5px;">Usuário: <strong style="color:white;">${m.user}</strong></p><p>Senha: <strong style="color:white;">${m.pass}</strong></p><p style="margin-top: 5px;">Status: ${m.status === 'ativo' ? '<span class="status-ativo">Ativo</span>' : '<span class="status-inativo">Inativo</span>'}</p></div><div class="member-actions"><button class="btn-adm btn-edit-xp" onclick="editarXP('${m.user}')">Editar XP</button>${btnAcaoStatus}<button class="btn-adm btn-delete" onclick="excluirMembro('${m.user}')">Excluir</button></div>`; lista.appendChild(div);
+            });
+        }
+
+        function excluirMembro(username) { if(confirm("Excluir conta de '" + username + "' para sempre?")) { dbUsers = dbUsers.filter(u => u.user !== username); salvarDB(); renderizarMembrosAdm(); } }
+        function alternarStatusMembro(username) { let user = dbUsers.find(u => u.user === username); if(user) { user.status = (user.status === 'ativo') ? 'inativo' : 'ativo'; salvarDB(); renderizarMembrosAdm(); } }
+        function editarXP(username) { let user = dbUsers.find(u => u.user === username); if(user) { let novoXP = prompt("Novo XP para " + user.nome + ":", user.xp); if(novoXP !== null && !isNaN(novoXP)) { user.xp = parseInt(novoXP); if(user.xp < 0) user.xp = 0; salvarDB(); renderizarMembrosAdm(); } } }
+        function obterPatente(xpAtual) { let index = 0; for(let i=0; i<PATENTES_REGRAS.length; i++) { if(xpAtual >= PATENTES_REGRAS[i].xpReq) index = i; } return PATENTES_REGRAS[index].nome; }
+
+        // ==========================================
+        // MENU PÍLULA E UTILIDADES
+        // ==========================================
+        function moverPilula(el) {
+            let indicator = document.getElementById('navIndicator'); 
+            indicator.style.width = el.offsetWidth + 'px'; indicator.style.transform = `translateX(${el.offsetLeft}px)`;
+        }
+
+        function mudarAba(abaId, el) { 
+            document.querySelectorAll('.aba-conteudo').forEach(a => a.classList.remove('ativa')); 
+            document.querySelectorAll('.nav-links a').forEach(l => l.classList.remove('active')); 
+            document.getElementById(abaId).classList.add('ativa'); el.classList.add('active'); 
+            
+            moverPilula(el);
+
+            if(abaId === 'matilha') { renderizarMatilha(); }
+            if(abaId === 'patentes') { renderizarPatentesUI(); renderizarConquistasUI(); }
+        }
+        
+        function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
+        function toggleGrupo(el) { const body = el.nextElementSibling; body.style.display = (body.style.display === 'flex' || body.style.display === 'block') ? 'none' : 'flex'; }
+        
+        function atualizarRelogio() { const agora = new Date(); const dias = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']; const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']; let strData = `${dias[agora.getDay()]}, ${agora.getDate().toString().padStart(2, '0')} de ${meses[agora.getMonth()]}`; let strHora = agora.toLocaleTimeString('pt-BR'); const elemsData = document.querySelectorAll('.relogio-data'); const elemsHora = document.querySelectorAll('.relogio-hora'); if(elemsData.length > 0) elemsData[0].innerText = strData.toUpperCase(); if(elemsHora.length > 0) elemsHora[0].innerText = strHora; } setInterval(atualizarRelogio, 1000); atualizarRelogio();
+
+        let meuGrafico = null;
+        try {
+            const ctx = document.getElementById('evolucaoChart').getContext('2d');
+            let gradient = ctx.createLinearGradient(0, 0, 0, 400); gradient.addColorStop(0, 'rgba(139, 92, 246, 0.5)'); gradient.addColorStop(1, 'rgba(139, 92, 246, 0)');   
+            meuGrafico = new Chart(ctx, { type: 'line', data: { labels: ['Início'], datasets: [{ label: 'Score de Desempenho', data: [0], borderColor: '#8b5cf6', backgroundColor: gradient, borderWidth: 3, pointBackgroundColor: '#fff', pointRadius: 4, tension: 0.4, fill: true }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, suggestedMax: 50, grid: { color: '#27272a' }, ticks: { color: '#a1a1aa' } }, x: { grid: { color: '#27272a' }, ticks: { color: '#a1a1aa' } } } } });
+        } catch(e) {}
+    </script>
+</body>
+</html>
